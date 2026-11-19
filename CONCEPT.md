@@ -8,6 +8,8 @@ A World of Warcraft: Forever social-memory addon that remembers recurring nearby
 
 It seeks familiarity rather than a constant automated nameplate layer; it works with nameplates switched off, preserves account-wide encounter history and offers subjective personal marks. Shared marks require caution in social presentation.
 
+The main panel can stay out of the way in crowded capitals or remain entirely manual while detection and personal encounter memory continue in the background. Visibility is a presentation choice, not a switch for social-memory collection.
+
 Based on existing README, development notes and Lua source, not invented historical conversations.
 
 ## Social intent and evolution (audit #32)

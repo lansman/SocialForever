@@ -83,3 +83,20 @@ echo "Checking recognition/list synchronization..."
 grep -Fq 'not Memory.RecognitionCurrentlyNearby(key)' Memory.lua
 grep -Fq 'pcall(Detection.ConsiderUnit, "target", true, "target")' Memory.lua
 grep -Fq 'Memory.FlushRecognitionAfterCombat()' Events.lua
+
+echo "Checking event-driven resting-area visibility..."
+grep -Fq 'type(IsResting) == "function"' Core.lua
+grep -Fq 'events:RegisterEvent("PLAYER_UPDATE_RESTING")' Events.lua
+grep -Fq 'C.PANEL_VISIBILITY_AUTO = "auto_hide"' Core.lua
+grep -Fq 'type(UnitOnTaxi) == "function"' Core.lua
+grep -Fq 'type(IsFlying) == "function"' Core.lua
+grep -Fq 'instanceType == "pvp" or instanceType == "arena"' Core.lua
+grep -Fq 'SF.Events.Listen("PLAYER_CONTROL_LOST")' Events.lua
+grep -Fq 'events, "UNIT_FLAGS", "player"' Events.lua
+
+echo "Checking native minimap button..."
+grep -Fq 'function UI.BuildMinimapButton()' UI.lua
+grep -Fq 'SF.UI.BuildMinimapButton()' Events.lua
+grep -Fq 'SocialForeverMinimapButton' UI.lua
+grep -Fq 'db.minimapButtonX' Core.lua
+grep -Fq 'Right-click: settings' UI.lua

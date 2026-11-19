@@ -71,3 +71,23 @@ The rule is now simple: recognition is downstream of detection. A deliberate tar
 Freezing the protected rows solved the blocked-action errors, but live play made the cost obvious: hovering somebody during a fight could detect them underneath without actually showing them until combat ended. That defeated one of the useful moments for SocialForever, because the point is often to notice somebody helping nearby and invite them while the fight is still happening.
 
 The protected target rows now stay exactly where Forever requires them to stay, while a separate ordinary overlay carries the live combat presentation. A new mouseover can appear there immediately and gets a deliberate Invite button. The old secure target action is intentionally not borrowed for a different name during combat; after combat the normal rows repaint and targeting works again. AI implemented the separation and regression checks. The actual invite and overlay behavior still need to be exercised in the live client before they count as verified.
+
+## 2026-11-10 — Let settlements be quieter
+
+Crowded cities and settlements do not need the same persistent player list as the open world, but hiding the window should not make SocialForever forget the people nearby. Three explicit presentation modes preserve the original behavior, hide wherever the client reports a resting area, or open only when asked.
+
+The implementation keeps manual intent separate from automatic presentation. Closing the window remains a real user choice that a later zone event cannot undo, while a resting-area hide can be reversed temporarily with `/sf show`. AI implemented the client resting-status check, event-driven transitions, SavedVariables migration, combat deferral and automated scenarios. The tests do not replace entering cities, smaller settlements and inns in the live Forever client, so those checks remain open.
+
+The gray familiar-player thoughts also proved noisier than useful for every play style. A new setting can suppress those chat lines and cancel any already queued thought while retaining the familiarity colors, detection and history underneath. Existing installations remain On until the player explicitly chooses Off.
+
+## 2026-11-10 — Put SocialForever where it can be found
+
+The addon-compartment hook existed in metadata, but it did not give me a visible or reliable entry point in the Forever interface. A small note icon now sits around the minimap so the panel and its settings can be reached without remembering a slash command.
+
+AI implemented the native button, shared toggle behavior, right-click Settings access, draggable saved position and mock coverage. Automated checks cannot confirm how the artwork and mouse interaction feel in the live client, so that visual pass remains open.
+
+## 2026-11-10 — Choose when the panel should step aside
+
+Hiding SocialForever only in settlements was too narrow: a flight path and a battleground can also be moments when the player list is unnecessary. The automatic mode now lets me choose those situations independently instead of accepting one bundled rule.
+
+AI implemented the three persisted checkboxes, migration from the old resting-area mode, event-driven flight/PvP transitions and automated scenarios. Live taxi, flying and battleground transitions remain to be observed in Forever before they count as verified.

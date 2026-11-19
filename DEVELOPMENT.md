@@ -5,6 +5,37 @@ Social Forever, by Babunigaming. Newest step first.
 When a change ships, add it at the top. Keep the note about what the player can see, and why it was made.
 
 
+## 0.4.11-beta — selectable auto-hide situations
+
+- Babuni extended panel auto-hiding beyond settlements and specifically requested hiding during flight, with separate checkboxes for each context.
+- The auto-hide mode now combines three independent SavedVariables: resting areas, taxi/free flight, and battleground/arena instances. The previous resting-area mode migrates without enabling new contexts unexpectedly.
+- `UnitOnTaxi`, `IsFlying`, and `IsInInstance` provide locale-independent state. Existing world/zone/resting events are joined by control, mount, unit-flag and battlefield events; no visibility polling ticker was added.
+- A temporary manual reveal is scoped to the current active context signature. Changing from one enabled situation to another expires the override instead of carrying it indefinitely.
+- Automated checks cover each context, migration, manual intent and combat deferral. Live flight and PvP transitions still require Forever testing.
+
+
+## 0.4.10-beta — native minimap access
+
+- Babuni requested a discoverable entry point after the addon-compartment action was not visible in the Forever interface.
+- A native note button is now created as a child of `Minimap`, avoiding an external broker or minimap-button dependency.
+- Left-click uses the same manual toggle path as `/sf`; right-click opens the panel and invokes its existing Settings button.
+- Dragging projects the cursor position onto an 80-pixel ring and saves the resulting X/Y offsets in `SocialForeverDB`.
+- Lua syntax, mock interaction, persistence, static wiring and package integrity are automated. Button artwork, placement, clicks and combat/resting-area behavior still require live Forever testing.
+
+
+## 0.4.9-beta — settlement panel visibility
+
+- Added a persisted **Familiar thoughts** On/Off choice after Babuni identified the gray “I've seen this … before” chat lines as unwanted noise. Off invalidates delayed and combat-queued thoughts while leaving detection and memory untouched; absent SavedVariables default to On for compatibility.
+- Babuni requested a quieter interface in cities and settlements without disabling the background social-memory behavior.
+- Settings now offer Always visible, Hide in cities and settlements, and Manual only. Always visible is the migration/default path, preserving previous behavior.
+- `IsResting()` is the primary locale-independent signal for cities, recognized settlements and inns; `PLAYER_UPDATE_RESTING` applies transitions immediately. The former capital UiMapIDs remain only as a compatibility fallback if the resting API is unavailable.
+- Automatic hides never write `db.hidden`. That field remains the user's manual intent, preventing a zone event from reopening a panel the player deliberately closed.
+- A resting-area override exists only for the current visit. `/sf show` opens the panel there; repeating the command hides it and records a manual close. Leaving the resting area expires the override.
+- Manual-only display is session-scoped: it starts hidden after login or reload and opens only from a user action.
+- Zone changes use `PLAYER_ENTERING_WORLD`, `ZONE_CHANGED`, `ZONE_CHANGED_INDOORS`, and `ZONE_CHANGED_NEW_AREA`; no zone polling timer was added. Panel visibility is deferred during combat lockdown and flushed on `PLAYER_REGEN_ENABLED`.
+- Detection, memory and sharing code paths were not gated by the panel. Lua syntax, mock behavior, static checks and package integrity are automated; live city transitions and combat behavior remain to be tested in Forever.
+
+
 ## Unreleased — combat-time Nearby and inviting
 
 - Live use showed that the 0.4.8 protected-frame hotfix had become too conservative: detection continued during combat, but a player discovered by mouseover could remain invisible until combat ended.

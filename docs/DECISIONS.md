@@ -41,3 +41,24 @@ These decisions are evidenced by recorded development changes. Where an original
 ## Hotfix release decision — 2026-11-05
 
 - **0.4.8-beta hotfix timing:** Live Forever testing exposed two protected-action failures in 0.4.7-beta: secure list-row layout changes during combat and a combat-time `CheckInteractDistance` call. Babuni directed immediate release preparation once both fixes and their automated regression checks passed. Final live retesting of the corrected paths is still pending and must not be described as completed.
+
+## City and settlement visibility — 2026-11-10
+
+- **Presentation only:** Babuni directed auto-hiding in cities and settlements while preserving background player detection and encounter history.
+- **Manual intent wins:** Automatic transitions do not write the persistent manual-hidden field, so zone changes cannot reopen a deliberately closed panel.
+- **Resting status first:** WoW's `IsResting()` status is locale-independent and represents the client's recognized cities, settlements and inns. Classic capital map/name matching remains only a compatibility fallback.
+- **No polling:** Resting, world-entry and zone-change events are sufficient. Combat-lockdown visibility changes wait for `PLAYER_REGEN_ENABLED`.
+- **Familiar thoughts are optional:** Babuni identified the gray recognition lines as unwanted noise. The setting suppresses only their chat presentation; it does not disable the social-memory mechanics that feed familiarity colors and history.
+
+## Native minimap access — 2026-11-10
+
+- **Visible entry point:** Babuni requested a separate minimap icon after neither an icon nor a standard Interface/AddOns settings page was discoverable in the live client.
+- **Reuse existing behavior:** The button calls the established panel and Settings paths rather than creating a second configuration interface.
+- **No UI dependency:** A native `Minimap` child keeps installation self-contained; saved X/Y offsets preserve the player's chosen location.
+
+## Selectable automatic-hide contexts — 2026-11-10
+
+- **Independent choices:** Babuni requested separate checkboxes so resting areas, flight and battlegrounds can be selected without coupling unrelated situations.
+- **No detection change:** Each checkbox affects only main-panel presentation; scanning, social interaction records and encounter history continue.
+- **Event-driven state:** Taxi/free-flight and PvP state reuse client APIs and events rather than adding a visibility polling timer.
+- **Compatibility:** Existing resting-area users keep that checkbox enabled after migration, while flight and PvP remain opt-in.

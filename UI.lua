@@ -680,11 +680,35 @@ function UI.PositionMain()
     UI.ApplySize()
 end
 
+function UI.SetMainShown(shown)
+    if type(InCombatLockdown) == "function" and InCombatLockdown() then
+        S.pendingMainShown = shown and true or false
+        return false
+    end
+    S.pendingMainShown = nil
+    if shown then
+        UI.PositionMain()
+        S.main:Show()
+        Detection.Scan()
+    else
+        S.main:Hide()
+        if S.menu then
+            S.menu:Hide()
+        end
+        if S.settingsMenu then
+            S.settingsMenu:Hide()
+        end
+    end
+    return true
+end
+
 function UI.HideMain()
-    S.main:Hide()
     if SF.db then
         SF.db.hidden = true
     end
+    S.autoHidePanelOverride = false
+    S.manualPanelShown = false
+    UI.SetMainShown(false)
     if S.menu then
         S.menu:Hide()
     end
@@ -693,13 +717,173 @@ function UI.HideMain()
     end
 end
 
-function UI.ShowMain()
-    UI.PositionMain()
-    S.main:Show()
+function UI.ShowMain(toggleAutoHideOverride)
+    local autoHideContext = Util.AutoHideContext()
+    local autoHideActive = autoHideContext ~= ""
+    if toggleAutoHideOverride
+        and Util.PanelVisibilityMode() == C.PANEL_VISIBILITY_AUTO
+        and autoHideActive
+        and S.autoHidePanelOverride
+        and (S.main:IsShown() or S.pendingMainShown == true)
+    then
+        UI.HideMain()
+        return
+    end
     if SF.db then
         SF.db.hidden = false
     end
-    Detection.Scan()
+    S.manualPanelShown = true
+    S.autoHideContext = autoHideContext
+    S.autoHidePanelOverride = autoHideActive
+        and Util.PanelVisibilityMode() == C.PANEL_VISIBILITY_AUTO
+        or false
+    UI.SetMainShown(true)
+end
+
+function UI.ApplyPanelVisibility()
+    if not SF.db or not S.main then
+        return
+    end
+    local autoHideContext = Util.AutoHideContext()
+    if S.autoHideContext ~= autoHideContext then
+        S.autoHideContext = autoHideContext
+        S.autoHidePanelOverride = false
+    end
+
+    local mode = Util.PanelVisibilityMode()
+    local shown = false
+    if mode == C.PANEL_VISIBILITY_NORMAL then
+        shown = not SF.db.hidden
+    elseif mode == C.PANEL_VISIBILITY_AUTO then
+        shown = not SF.db.hidden and (autoHideContext == "" or S.autoHidePanelOverride)
+    else
+        shown = not SF.db.hidden and S.manualPanelShown
+    end
+    UI.SetMainShown(shown)
+end
+
+function UI.SetPanelVisibilityMode(mode)
+    if not SF.db then
+        return
+    end
+    if mode ~= C.PANEL_VISIBILITY_AUTO and mode ~= C.PANEL_VISIBILITY_MANUAL then
+        mode = C.PANEL_VISIBILITY_NORMAL
+    end
+    SF.db.panelVisibility = mode
+    S.autoHidePanelOverride = false
+    if mode == C.PANEL_VISIBILITY_MANUAL then
+        S.manualPanelShown = S.main and S.main:IsShown() or false
+    else
+        S.manualPanelShown = false
+    end
+    UI.ApplyPanelVisibility()
+end
+
+function UI.SetAutoHideCondition(field, enabled)
+    if not SF.db or (field ~= "autoHideRestAreas" and field ~= "autoHideFlight" and field ~= "autoHidePvP") then
+        return
+    end
+    SF.db[field] = enabled and true or false
+    S.autoHideContext = nil
+    S.autoHidePanelOverride = false
+    UI.ApplyPanelVisibility()
+end
+
+function UI.FlushPendingPanelVisibility()
+    if S.pendingMainShown ~= nil then
+        local shown = S.pendingMainShown
+        S.pendingMainShown = nil
+        UI.SetMainShown(shown)
+    else
+        UI.ApplyPanelVisibility()
+    end
+end
+
+function UI.PositionMinimapButton(x, y)
+    local button = S.minimapButton
+    if not button or not Minimap then
+        return
+    end
+    x = tonumber(x) or (SF.db and SF.db.minimapButtonX) or -52
+    y = tonumber(y) or (SF.db and SF.db.minimapButtonY) or -52
+    local distance = math.sqrt((x * x) + (y * y))
+    local radius = 80
+    if distance > 0 then
+        x = (x / distance) * radius
+        y = (y / distance) * radius
+    else
+        x, y = -52, -52
+    end
+    if SF.db then
+        SF.db.minimapButtonX = x
+        SF.db.minimapButtonY = y
+    end
+    button:ClearAllPoints()
+    button:SetPoint("CENTER", Minimap, "CENTER", x, y)
+end
+
+function UI.BuildMinimapButton()
+    if S.minimapButton or not Minimap then
+        return
+    end
+    local button = CreateFrame("Button", "SocialForeverMinimapButton", Minimap)
+    S.minimapButton = button
+    button:SetSize(31, 31)
+    button:SetFrameStrata("MEDIUM")
+    button:SetFrameLevel((Minimap:GetFrameLevel() or 0) + 8)
+    button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    button:RegisterForDrag("LeftButton")
+
+    local icon = button:CreateTexture(nil, "BACKGROUND")
+    icon:SetSize(20, 20)
+    icon:SetPoint("CENTER")
+    icon:SetTexture("Interface\\Icons\\INV_Misc_Note_01")
+    icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+    local border = button:CreateTexture(nil, "OVERLAY")
+    border:SetSize(53, 53)
+    border:SetPoint("TOPLEFT")
+    border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+    button:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+
+    button:SetScript("OnClick", function(_, mouseButton)
+        if mouseButton == "RightButton" then
+            if not S.main:IsShown() then
+                UI.ShowMain(true)
+            end
+            if S.main:IsShown() and S.main.settings then
+                S.main.settings:Click()
+            end
+        elseif S.main:IsShown() then
+            UI.HideMain()
+        else
+            UI.ShowMain(true)
+        end
+    end)
+    button:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+        GameTooltip:SetText("Social Forever", 1, 0.82, 0.25)
+        GameTooltip:AddLine("Left-click: show or hide", 0.9, 0.9, 0.9)
+        GameTooltip:AddLine("Right-click: settings", 0.9, 0.9, 0.9)
+        GameTooltip:AddLine("Drag: move around the minimap", 0.65, 0.65, 0.65)
+        GameTooltip:Show()
+    end)
+    button:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+    button:SetScript("OnDragStart", function(self)
+        self:SetScript("OnUpdate", function()
+            local centerX, centerY = Minimap:GetCenter()
+            local scale = Minimap:GetEffectiveScale()
+            local cursorX, cursorY = GetCursorPosition()
+            if centerX and centerY and scale and scale > 0 and cursorX and cursorY then
+                UI.PositionMinimapButton((cursorX / scale) - centerX, (cursorY / scale) - centerY)
+            end
+        end)
+    end)
+    button:SetScript("OnDragStop", function(self)
+        self:SetScript("OnUpdate", nil)
+    end)
+    UI.PositionMinimapButton()
 end
 
 function UI.BuildMain()
@@ -747,7 +931,7 @@ function UI.BuildMain()
         self:SetBackdropColor(0.24, 0.20, 0.08, 0.98)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         GameTooltip:SetText("Settings", 1, 0.82, 0.25)
-        GameTooltip:AddLine("Grouping, name size, background, and memory.", 0.9, 0.9, 0.9, true)
+        GameTooltip:AddLine("Panel visibility, familiar thoughts, grouping, name size, background, and memory.", 0.9, 0.9, 0.9, true)
         GameTooltip:Show()
     end)
     settings:SetScript("OnLeave", function(self)
@@ -758,7 +942,7 @@ function UI.BuildMain()
 
     local panel = CreateFrame("Frame", "SocialForeverSettings", UIParent, "BackdropTemplate")
     panel:SetFrameStrata("DIALOG")
-    panel:SetSize(176, 310)
+    panel:SetSize(236, 520)
     panel:SetClampedToScreen(true)
     panel:EnableMouse(true)
     panel:Hide()
@@ -767,7 +951,7 @@ function UI.BuildMain()
 
     local function MenuRow(y, clickable)
         local button = CreateFrame("Button", nil, panel)
-        button:SetSize(160, 18)
+        button:SetSize(220, 18)
         button:SetPoint("TOPLEFT", 8, y)
         local label = button:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
         label:SetPoint("LEFT", 4, 0)
@@ -787,29 +971,46 @@ function UI.BuildMain()
     local head = MenuRow(-8, false)
     head.label:SetText("Settings")
     head.label:SetTextColor(1, 0.82, 0.25)
-    local sameHead = MenuRow(-28, false)
+    local visibilityHead = MenuRow(-28, false)
+    visibilityHead.label:SetText("Panel visibility")
+    visibilityHead.label:SetTextColor(0.75, 0.68, 0.4)
+    local visibilityNormal = MenuRow(-46, true)
+    local visibilityAuto = MenuRow(-64, true)
+    local visibilityManual = MenuRow(-82, true)
+    local hideWhileHead = MenuRow(-106, false)
+    hideWhileHead.label:SetText("Hide while")
+    hideWhileHead.label:SetTextColor(0.75, 0.68, 0.4)
+    local hideRest = MenuRow(-124, true)
+    local hideFlight = MenuRow(-142, true)
+    local hidePvP = MenuRow(-160, true)
+    local thoughtsHead = MenuRow(-184, false)
+    thoughtsHead.label:SetText("Familiar thoughts")
+    thoughtsHead.label:SetTextColor(0.75, 0.68, 0.4)
+    local thoughtsOn = MenuRow(-202, true)
+    local thoughtsOff = MenuRow(-220, true)
+    local sameHead = MenuRow(-244, false)
     sameHead.label:SetText("Same-mob grouping")
     sameHead.label:SetTextColor(0.75, 0.68, 0.4)
-    local askHead = MenuRow(-46, false)
+    local askHead = MenuRow(-262, false)
     askHead.label:SetText("Ask before inviting")
     askHead.label:SetTextColor(0.65, 0.65, 0.65)
-    local askOn = MenuRow(-64, true)
-    local askOff = MenuRow(-82, true)
-    local sizeHead = MenuRow(-106, false)
+    local askOn = MenuRow(-280, true)
+    local askOff = MenuRow(-298, true)
+    local sizeHead = MenuRow(-322, false)
     sizeHead.label:SetText("Name size")
     sizeHead.label:SetTextColor(0.75, 0.68, 0.4)
-    local size16 = MenuRow(-124, true)
-    local size18 = MenuRow(-142, true)
-    local size20 = MenuRow(-160, true)
-    local opacityHead = MenuRow(-184, false)
+    local size16 = MenuRow(-340, true)
+    local size18 = MenuRow(-358, true)
+    local size20 = MenuRow(-376, true)
+    local opacityHead = MenuRow(-400, false)
     opacityHead.label:SetText("Background")
     opacityHead.label:SetTextColor(0.75, 0.68, 0.4)
     local opacityValue = panel:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     opacityValue:SetPoint("RIGHT", opacityHead, "RIGHT", -4, 0)
     opacityValue:SetTextColor(0.9, 0.9, 0.9)
     local slider = CreateFrame("Slider", nil, panel, "BackdropTemplate")
-    slider:SetPoint("TOPLEFT", 18, -206)
-    slider:SetSize(140, 16)
+    slider:SetPoint("TOPLEFT", 18, -422)
+    slider:SetSize(200, 16)
     slider:SetOrientation("HORIZONTAL")
     slider:SetMinMaxValues(15, 100)
     if slider.SetValueStep then
@@ -860,9 +1061,24 @@ function UI.BuildMain()
         end
     end
 
+    local function PaintSettingsCheck(button, checked, text)
+        button.label:SetText((checked and "[x] " or "[ ] ") .. text)
+        button.label:SetTextColor(checked and 1 or 0.9, checked and 0.82 or 0.9, checked and 0.25 or 0.9)
+    end
+
     local function PaintSettingsMenu()
         local ask = Group.SameMobAskOn and Group.SameMobAskOn()
         local size = Util.NameSize()
+        local visibility = Util.PanelVisibilityMode()
+        local thoughts = Memory.RecognitionThoughtsOn and Memory.RecognitionThoughtsOn()
+        PaintSettingsChoice(visibilityNormal, visibility == C.PANEL_VISIBILITY_NORMAL, "Always visible")
+        PaintSettingsChoice(visibilityAuto, visibility == C.PANEL_VISIBILITY_AUTO, "Hide in selected situations")
+        PaintSettingsChoice(visibilityManual, visibility == C.PANEL_VISIBILITY_MANUAL, "Manual only")
+        PaintSettingsCheck(hideRest, SF.db and SF.db.autoHideRestAreas, "Cities, settlements, inns")
+        PaintSettingsCheck(hideFlight, SF.db and SF.db.autoHideFlight, "Taxi / flying")
+        PaintSettingsCheck(hidePvP, SF.db and SF.db.autoHidePvP, "Battlegrounds / arenas")
+        PaintSettingsChoice(thoughtsOn, thoughts, "On")
+        PaintSettingsChoice(thoughtsOff, not thoughts, "Off")
         PaintSettingsChoice(askOn, ask, "On")
         PaintSettingsChoice(askOff, not ask, "Off")
         PaintSettingsChoice(size16, size == 16, "16")
@@ -880,11 +1096,51 @@ function UI.BuildMain()
             PaintSettingsMenu()
         end)
     end
+    LeaveChoice(visibilityNormal)
+    LeaveChoice(visibilityAuto)
+    LeaveChoice(visibilityManual)
+    LeaveChoice(hideRest)
+    LeaveChoice(hideFlight)
+    LeaveChoice(hidePvP)
+    LeaveChoice(thoughtsOn)
+    LeaveChoice(thoughtsOff)
     LeaveChoice(askOn)
     LeaveChoice(askOff)
     LeaveChoice(size16)
     LeaveChoice(size18)
     LeaveChoice(size20)
+    visibilityNormal:SetScript("OnClick", function()
+        UI.SetPanelVisibilityMode(C.PANEL_VISIBILITY_NORMAL)
+        PaintSettingsMenu()
+    end)
+    visibilityAuto:SetScript("OnClick", function()
+        UI.SetPanelVisibilityMode(C.PANEL_VISIBILITY_AUTO)
+        PaintSettingsMenu()
+    end)
+    visibilityManual:SetScript("OnClick", function()
+        UI.SetPanelVisibilityMode(C.PANEL_VISIBILITY_MANUAL)
+        PaintSettingsMenu()
+    end)
+    hideRest:SetScript("OnClick", function()
+        UI.SetAutoHideCondition("autoHideRestAreas", not SF.db.autoHideRestAreas)
+        PaintSettingsMenu()
+    end)
+    hideFlight:SetScript("OnClick", function()
+        UI.SetAutoHideCondition("autoHideFlight", not SF.db.autoHideFlight)
+        PaintSettingsMenu()
+    end)
+    hidePvP:SetScript("OnClick", function()
+        UI.SetAutoHideCondition("autoHidePvP", not SF.db.autoHidePvP)
+        PaintSettingsMenu()
+    end)
+    thoughtsOn:SetScript("OnClick", function()
+        if Memory.SetRecognitionThoughts then Memory.SetRecognitionThoughts(true) end
+        PaintSettingsMenu()
+    end)
+    thoughtsOff:SetScript("OnClick", function()
+        if Memory.SetRecognitionThoughts then Memory.SetRecognitionThoughts(false) end
+        PaintSettingsMenu()
+    end)
     askOn:SetScript("OnClick", function()
         if Group.SetSameMobAsk then Group.SetSameMobAsk(true) end
         PaintSettingsMenu()
@@ -909,13 +1165,13 @@ function UI.BuildMain()
     size18:SetScript("OnClick", PickSize(18))
     size20:SetScript("OnClick", PickSize(20))
 
-    local memoryHead = MenuRow(-234, false)
+    local memoryHead = MenuRow(-450, false)
     memoryHead.label:SetText("Memory")
     memoryHead.label:SetTextColor(0.75, 0.68, 0.4)
-    local resetOne = MenuRow(-252, true)
+    local resetOne = MenuRow(-468, true)
     resetOne.label:SetText("  Reset one player…")
     resetOne.label:SetTextColor(0.9, 0.9, 0.9)
-    local resetAll = MenuRow(-270, true)
+    local resetAll = MenuRow(-486, true)
     resetAll.label:SetText("  Reset all remembered…")
     resetAll.label:SetTextColor(0.95, 0.55, 0.45)
     LeaveChoice(resetOne)

@@ -15,6 +15,7 @@ local Sharing = SF.Sharing
 local UI = SF.UI
 
 SF.UI.BuildMain()
+SF.UI.BuildMinimapButton()
 SF.UI.BuildMenu()
 SF.UI.BuildPopup()
 SF.UI.BuildSameMobPopup()
@@ -23,6 +24,10 @@ local events = CreateFrame("Frame")
 events:RegisterEvent("ADDON_LOADED")
 events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
+events:RegisterEvent("ZONE_CHANGED")
+events:RegisterEvent("ZONE_CHANGED_INDOORS")
+events:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+events:RegisterEvent("PLAYER_UPDATE_RESTING")
 events:RegisterEvent("GROUP_ROSTER_UPDATE")
 events:RegisterEvent("GROUP_LEFT")
 events:RegisterEvent("CHAT_MSG_SYSTEM")
@@ -64,8 +69,15 @@ SF.Events.Listen("PARTY_INVITE_REQUEST")
 SF.Events.Listen("RESURRECT_REQUEST")
 SF.Events.Listen("DAMAGE_METER_CURRENT_SESSION_UPDATED")
 SF.Events.Listen("DAMAGE_METER_COMBAT_SESSION_UPDATED")
+SF.Events.Listen("PLAYER_CONTROL_LOST")
+SF.Events.Listen("PLAYER_CONTROL_GAINED")
+SF.Events.Listen("PLAYER_MOUNT_DISPLAY_CHANGED")
+SF.Events.Listen("UPDATE_BATTLEFIELD_STATUS")
 if events.RegisterUnitEvent then
     pcall(events.RegisterUnitEvent, events, "UNIT_AURA", "player")
+    pcall(events.RegisterUnitEvent, events, "UNIT_FLAGS", "player")
+else
+    SF.Events.Listen("UNIT_FLAGS")
 end
 
 events:SetScript("OnEvent", function(_, event, ...)
@@ -86,9 +98,6 @@ events:SetScript("OnEvent", function(_, event, ...)
         UI.ApplyBackground()
         if S.main.settings and S.main.settings.Paint then
             S.main.settings:Paint()
-        end
-        if not SF.db.hidden then
-            S.main:Show()
         end
         if C_FriendList and C_FriendList.ShowFriends then
             pcall(C_FriendList.ShowFriends)
@@ -124,6 +133,20 @@ events:SetScript("OnEvent", function(_, event, ...)
         C_Timer.After(3, function()
             Detection.RequestGeneralRoster(true)
         end)
+        UI.ApplyPanelVisibility()
+        return
+    end
+    if event == "ZONE_CHANGED"
+        or event == "ZONE_CHANGED_INDOORS"
+        or event == "ZONE_CHANGED_NEW_AREA"
+        or event == "PLAYER_UPDATE_RESTING"
+        or event == "PLAYER_CONTROL_LOST"
+        or event == "PLAYER_CONTROL_GAINED"
+        or event == "PLAYER_MOUNT_DISPLAY_CHANGED"
+        or event == "UPDATE_BATTLEFIELD_STATUS"
+        or (event == "UNIT_FLAGS" and arg1 == "player")
+    then
+        UI.ApplyPanelVisibility()
         return
     end
     if event == "CHAT_MSG_CHANNEL" then
@@ -225,6 +248,7 @@ events:SetScript("OnEvent", function(_, event, ...)
         return
     end
     if event == "PLAYER_REGEN_ENABLED" then
+        UI.FlushPendingPanelVisibility()
         Detection.Scan()
         if S.listDirty and UI.RefreshList then
             S.listDirty = false
@@ -257,7 +281,7 @@ function SocialForever_CompartmentClick()
     if S.main:IsShown() then
         UI.HideMain()
     else
-        UI.ShowMain()
+        UI.ShowMain(true)
     end
 end
 
@@ -268,10 +292,10 @@ SlashCmdList.SOCIALFOREVER = function(msg)
     if msg == "hide" then
         UI.HideMain()
     elseif msg == "show" then
-        UI.ShowMain()
+        UI.ShowMain(true)
     elseif S.main:IsShown() then
         UI.HideMain()
     else
-        UI.ShowMain()
+        UI.ShowMain(true)
     end
 end

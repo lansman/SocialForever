@@ -117,6 +117,29 @@ C.FADE_IN_TIME = 0.4
 C.FADE_OUT_TIME = 3
 C.MOVE_HALF = 0.8
 
+C.PANEL_VISIBILITY_NORMAL = "normal"
+C.PANEL_VISIBILITY_AUTO = "auto_hide"
+C.PANEL_VISIBILITY_MANUAL = "manual"
+
+-- Compatibility fallback when the resting API is temporarily unavailable.
+C.REST_FALLBACK_MAP_IDS = {
+    [1453] = true, -- Stormwind City
+    [1454] = true, -- Orgrimmar
+    [1455] = true, -- Ironforge
+    [1456] = true, -- Thunder Bluff
+    [1457] = true, -- Darnassus
+    [1458] = true, -- Undercity
+}
+C.REST_FALLBACK_ZONE_NAMES = {
+    ironforge = true,
+    ["stormwind city"] = true,
+    stormwind = true,
+    darnassus = true,
+    orgrimmar = true,
+    ["thunder bluff"] = true,
+    undercity = true,
+}
+
 S.nearby = {}
 S.inZone = {}
 S.peers = {}
@@ -165,6 +188,11 @@ S.listTab = "nearby"
 S.sameMobInviteAt = {}
 S.sameMobQueue = {}
 S.sameMobPopup = nil
+S.autoHideContext = nil
+S.autoHidePanelOverride = false
+S.manualPanelShown = false
+S.pendingMainShown = nil
+S.minimapButton = nil
 -- Plumbing state bundled to stay under the chunk local limit.
 S.P = {
     publishSig = nil,
@@ -623,6 +651,26 @@ function Util.InitDB()
         db.listTab = "nearby"
     end
     S.listTab = db.listTab
+    if db.panelVisibility == "capital_cities" or db.panelVisibility == "rest_areas" then
+        db.panelVisibility = C.PANEL_VISIBILITY_AUTO
+    end
+    if db.panelVisibility ~= C.PANEL_VISIBILITY_AUTO
+        and db.panelVisibility ~= C.PANEL_VISIBILITY_MANUAL
+    then
+        db.panelVisibility = C.PANEL_VISIBILITY_NORMAL
+    end
+    if db.recognitionThoughts ~= false then
+        db.recognitionThoughts = true
+    end
+    if db.autoHideRestAreas ~= false then
+        db.autoHideRestAreas = true
+    end
+    db.autoHideFlight = db.autoHideFlight == true
+    db.autoHidePvP = db.autoHidePvP == true
+    if type(db.minimapButtonX) ~= "number" or type(db.minimapButtonY) ~= "number" then
+        db.minimapButtonX = -52
+        db.minimapButtonY = -52
+    end
     if db.sameMobAsk ~= true then
         db.sameMobAsk = false
     end
@@ -661,6 +709,94 @@ function Util.InitDB()
         end
     end
     SF.Memory.InvalidateMaxFamiliarity()
+end
+
+function Util.PanelVisibilityMode()
+    local mode = SF.db and SF.db.panelVisibility
+    if mode == C.PANEL_VISIBILITY_AUTO or mode == C.PANEL_VISIBILITY_MANUAL then
+        return mode
+    end
+    return C.PANEL_VISIBILITY_NORMAL
+end
+
+function Util.IsPlayerFlying()
+    if type(UnitOnTaxi) == "function" then
+        local ok, onTaxi = pcall(UnitOnTaxi, "player")
+        if ok and Util.PlainBool(onTaxi) == true then
+            return true
+        end
+    end
+    if type(IsFlying) == "function" then
+        local ok, flying = pcall(IsFlying)
+        if ok and Util.PlainBool(flying) == true then
+            return true
+        end
+    end
+    return false
+end
+
+function Util.IsPlayerInPvPInstance()
+    if type(IsInInstance) ~= "function" then
+        return false
+    end
+    local ok, inInstance, instanceType = pcall(IsInInstance)
+    inInstance = ok and Util.PlainBool(inInstance) or nil
+    instanceType = ok and Util.PlainString(instanceType) or nil
+    return inInstance == true and (instanceType == "pvp" or instanceType == "arena")
+end
+
+function Util.AutoHideContext()
+    if not SF.db then
+        return ""
+    end
+    local contexts = {}
+    if SF.db.autoHideRestAreas and Util.IsRestArea() then
+        contexts[#contexts + 1] = "rest"
+    end
+    if SF.db.autoHideFlight and Util.IsPlayerFlying() then
+        contexts[#contexts + 1] = "flight"
+    end
+    if SF.db.autoHidePvP and Util.IsPlayerInPvPInstance() then
+        contexts[#contexts + 1] = "pvp"
+    end
+    return table.concat(contexts, "+")
+end
+
+function Util.IsRestArea(mapID)
+    if mapID == nil and type(IsResting) == "function" then
+        local ok, resting = pcall(IsResting)
+        resting = ok and Util.PlainBool(resting) or nil
+        if resting ~= nil then
+            return resting
+        end
+    end
+    if mapID == nil and C_Map and type(C_Map.GetBestMapForUnit) == "function" then
+        local ok, current = pcall(C_Map.GetBestMapForUnit, "player")
+        if ok then
+            mapID = Util.PlainNumber(current)
+        end
+    end
+
+    local checked = {}
+    for _ = 1, 8 do
+        mapID = Util.PlainNumber(mapID)
+        if not mapID or checked[mapID] then
+            break
+        end
+        if C.REST_FALLBACK_MAP_IDS[mapID] then
+            return true
+        end
+        checked[mapID] = true
+        if not C_Map or type(C_Map.GetMapInfo) ~= "function" then
+            break
+        end
+        local ok, info = pcall(C_Map.GetMapInfo, mapID)
+        mapID = ok and type(info) == "table" and info.parentMapID or nil
+    end
+
+    -- Compatibility fallback for clients that temporarily return no UiMapID.
+    local zone = type(GetZoneText) == "function" and Util.PlainString(GetZoneText()) or nil
+    return zone ~= nil and C.REST_FALLBACK_ZONE_NAMES[zone:lower()] == true
 end
 
 function Util.DistanceYards(unit)

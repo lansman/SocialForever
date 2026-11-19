@@ -8,7 +8,7 @@ These are code/file observations. Read current README and CHANGELOG for detailed
 
 ## Architecture and behavior boundaries — audit #32
 
-`SocialForever.toc` declares Interface **16001**, version **0.4.8-beta**, account-wide `SocialForeverDB`, and load order `Core.lua → Memory.lua → Group.lua → Detection.lua → Sharing.lua → UI.lua → Events.lua`. The 0.3.0 development entry records the split from a large monolithic Lua file without intending a player-facing behavior change.
+`SocialForever.toc` declares Interface **16001**, version **0.4.11-beta**, account-wide `SocialForeverDB`, and load order `Core.lua → Memory.lua → Group.lua → Detection.lua → Sharing.lua → UI.lua → Events.lua`. The 0.3.0 development entry records the split from a large monolithic Lua file without intending a player-facing behavior change.
 
 `Core.lua` exposes the shared `SocialForever` namespace and constants, including a 50-yard nearby threshold, 180-second sighting TTL, three-second sort interval and 1200-second recognition cooldown. `Detection.lua` gathers varied partial clues while `Memory.lua` maintains records and derives familiarity. `UI.lua` presents a user-stable, target-pinned list. `Sharing.lua` has conservative whisper eligibility for Forever's two-part player names; the v0.4.4 wire format keeps an empty legacy flag slot and sends only marks. `Group.lua` and `Events.lua` connect grouping and runtime events.
 
@@ -37,3 +37,15 @@ Forever intentionally protects Combat Log text from addon parsing, so SocialFore
 Each entry in `S.sightings` may carry a bounded `origins` array describing the concrete evidence observed during that current Nearby appearance. Origin codes are additive and deduplicated; examples include target, mouseover, nameplate, group member, crafting, Damage Meter fighting, helpful aura, trade, duel and resurrection. `Detection.Publish` copies those origins into the current Nearby display entry and includes them in its display signature so a new reason can repaint the tooltip/list state.
 
 This provenance is deliberately ephemeral. It is not stored in `SocialForeverDB`, does not affect familiarity, sorting, marks or flags, and disappears when the current sighting expires. Historical place memory remains separate.
+
+## Main-panel visibility boundary
+
+`db.panelVisibility` stores one of `normal`, `auto_hide`, or `manual`; earlier `capital_cities` and `rest_areas` values migrate to `auto_hide`, while invalid or absent values migrate to `normal`. `db.hidden` remains only the player's persistent manual open/closed intent. The three auto-hide switches are `autoHideRestAreas`, `autoHideFlight`, and `autoHidePvP`.
+
+`IsResting()` is the primary locale-independent city/settlement signal. `UnitOnTaxi("player")` and `IsFlying()` cover taxi and free-flight states, while `IsInInstance()` type `pvp` / `arena` covers PvP instances. Resting, control, mount, unit-flag, battlefield, world-entry and zone events recompute presentation without another polling ticker. Classic capital UiMapIDs and names remain compatibility fallbacks only when the resting API yields no value. If combat lockdown is active, the desired visibility is queued until `PLAYER_REGEN_ENABLED`; detection and persistence continue independently.
+
+`db.recognitionThoughts` controls only the familiar-player chat thought. Missing values migrate to `true` to preserve earlier behavior. Switching it off invalidates delayed and combat-queued recognition messages but does not alter Nearby membership, familiarity bands, encounter counts or stored player history.
+
+## Minimap entry point
+
+`UI.BuildMinimapButton` creates a native child button on `Minimap` without an external library. Left-click follows the same show/hide functions as slash commands and the addon compartment; right-click reuses the existing Settings button. Dragging normalizes cursor-relative coordinates to a fixed minimap ring and persists `minimapButtonX` / `minimapButtonY` in `SocialForeverDB`. This entry point changes presentation only and does not gate detection or memory.

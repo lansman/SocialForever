@@ -17,6 +17,32 @@
 - Removed the three-second Combat Log chat-frame parser. Forever intentionally protects combat-log text from addon parsing, so nearby combat discovery now relies on exposed unit tokens/interactions and the built-in Damage Meter path instead.
 - Skinning is documented as gathering rather than crafting; no dedicated nearby-player Skinning event is currently verified.
 
+## 0.4.11-beta — 2026-11-10
+
+- Replaced the single city/settlement auto-hide choice with **Hide in selected situations** and independent checkboxes for **Cities, settlements, inns**, **Taxi / flying**, and **Battlegrounds / arenas**.
+- The former `rest_areas` mode migrates to the selected-situations mode with the resting-area checkbox enabled; flight and PvP remain off until deliberately selected.
+- Flight detection uses `UnitOnTaxi("player")` and `IsFlying()` when available. PvP detection uses the client's instance type for battlegrounds and arenas.
+- Control, mount, unit-flag, battlefield, world-entry and zone events update visibility without adding another polling timer. Detection and encounter history remain active while the panel is hidden.
+- Added mock coverage for taxi, free-flight, battleground, arena, ordinary-instance, persistence and migration behavior. Live Forever verification remains required.
+
+## 0.4.10-beta — 2026-11-10
+
+- Added a native SocialForever note button around the minimap; no external UI library is required.
+- Left-click toggles the main panel, including a temporary reveal while resting-area hiding is active. Right-click opens the panel and its Settings menu.
+- The button can be dragged around the minimap rim, and its position persists in `SocialForeverDB`.
+- Added mock coverage for button creation, left-click behavior, dragging, and SavedVariables persistence. Live Forever visual and interaction testing remains required.
+
+## 0.4.9-beta — 2026-11-10
+
+- Added **Settings → Familiar thoughts → On / Off**. Turning it off suppresses the gray “I've seen this … before” chat lines and cancels queued thoughts without changing Nearby detection, familiarity colors, encounter counts, or history. Existing users keep the previous On behavior until they choose Off.
+- Added **Panel visibility** settings: **Always visible**, **Hide in cities and settlements**, and **Manual only**. Existing users default to Always visible.
+- City/settlement mode uses WoW's locale-independent resting-area status, covering cities, recognized settlements and inns without maintaining a translated place-name list. The former unreleased `capital_cities` value migrates automatically.
+- Automatic hiding no longer changes the saved manual open/closed preference. A panel that the player closed stays closed after zone changes; a panel automatically hidden on entry is restored on exit only when it was otherwise open.
+- `/sf`, `/sf show`, `/sf hide`, and the addon-compartment toggle remain available. `/sf show` can temporarily override resting-area hiding, and repeating it there hides the panel again.
+- Manual-only mode never opens the panel automatically after login or `/reload`; a user command can still open it for the current session.
+- Panel visibility changes are deferred during combat lockdown and applied after combat. Detection, encounter memory, history, sharing, and invitations remain independent of whether the main panel is visible.
+- Added automated coverage for SavedVariables migration, all three modes, resting-area transitions, compatibility fallbacks, manual intent, temporary override, zone transitions, and combat deferral. Live Forever testing is still required.
+
 ## 0.4.8-beta — 2026-11-05
 
 - Fixed the live Forever combat-lockdown error `[ADDON_ACTION_BLOCKED] Button:SetHeight()` caused when `RefreshList()` tried to resize secure player rows during combat.

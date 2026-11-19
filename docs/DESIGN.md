@@ -1,9 +1,13 @@
 # SocialForever — Interaction and Visual Design
 
 **Human creative:** Babuni  
-**Scope:** Source-grounded guide to the 0.4.8-beta interface; final launch-day in-game verification remains pending.
+**Scope:** Source-grounded guide to the 0.4.11-beta interface; live verification of selectable auto-hide conditions and the native minimap button remains pending.
 
 ## Purpose
+
+Panel visibility is deliberately separate from detection and memory. Always visible preserves the original presentation, Hide in selected situations combines independent resting-area, flight and PvP checkboxes, and Manual only leaves opening entirely to the player. Automatic transitions never override a deliberate manual close.
+
+The note icon around the minimap provides a discoverable entry point when the addon compartment is absent or overlooked. Left-click mirrors the ordinary panel toggle, right-click opens the existing Settings surface, and dragging changes only the icon's saved position.
 
 SocialForever is designed for a player who keeps nameplates off but wants to notice people encountered during ordinary play. The movable window makes nearby people easier to target and invite without a conventional permanent nameplate overlay. Its wider ambition is social familiarity: repeat encounters can turn strangers into recognizable names.
 

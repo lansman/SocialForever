@@ -9,7 +9,7 @@ While you quest, the same players often cross your path again and again. Social 
 Over time, strangers can become familiar names.
 
 Built by **Babunigaming** for **World of Warcraft: Forever** (Interface 16001).  
-Current version: **0.4.8-beta**
+Current version: **0.4.11-beta**
 
 ## What it does
 
@@ -30,6 +30,7 @@ You can:
 - Exchange marks with nearby players who also use Social Forever.
 - Quietly notice familiar faces again (blue or purple names) with a soft chat thought.
 - Reset one remembered player, or all of them, from Settings → Memory.
+- Open Social Forever from a draggable button around the minimap.
 
 Your social memory is stored account-wide in `SocialForeverDB`.
 
@@ -122,7 +123,7 @@ When a **blue** or **purple** familiar appears on Nearby (not only on the zone t
 
 I've seen this Human Paladin before.
 
-It waits a few seconds after they join Nearby so the list can settle first. Each person has a 20-minute cooldown that survives reload and logout. Party or raid members do not trigger it. There is no sound and no popup.
+It waits a few seconds after they join Nearby so the list can settle first. Each person has a 20-minute cooldown that survives reload and logout. Party or raid members do not trigger it. There is no sound and no popup. Set **Settings → Familiar thoughts → Off** to suppress these chat lines without disabling detection or familiarity history.
 
 Hover over a player to see more of their history, including:
 
@@ -235,7 +236,8 @@ The window normally sits above the chat frame.
 - Hover the **x** for a reminder that `/sf` or `/socialforever` brings the window back.
 - Drag the title bar to move it.
 - Drag the `..` grip in the bottom-right corner to resize it.
-- Use the gear button to toggle the same-mob invite prompt, change name size and background opacity, and reset Memory (one player or all remembered players).
+- Use the gear button to choose **Panel visibility**, turn **Familiar thoughts** on or off, toggle the same-mob invite prompt, change name size and background opacity, and reset Memory (one player or all remembered players).
+- Left-click the minimap note icon to show or hide the panel. Right-click it to open Settings, or drag it around the minimap rim.
 - Use the mouse wheel to scroll longer lists.
 - Press Escape to close the right-click menu or group-rating window. The main Social Forever window stays open.
 
@@ -251,7 +253,7 @@ or
 /socialforever
 ```
 
-to show or hide the window. The addon-compartment button does the same.
+to show or hide the window. The minimap note icon and addon-compartment button provide the same toggle. In **Hide in selected situations** mode, Settings provides independent checkboxes for **Cities, settlements, inns**, **Taxi / flying**, and **Battlegrounds / arenas**. `/sf show` or the minimap icon temporarily reveals the panel while an enabled condition is active; repeating the action hides it again. Automatic hiding never stops detection or encounter-history updates.
 
 ## Installation
 
@@ -288,4 +290,4 @@ The journal distinguishes source-based reconstruction, human creative direction,
 
 The original [development log](DEVELOPMENT.md) and [changelog](CHANGELOG.md) remain the primary account of releases and corrections. The supporting [design](docs/DESIGN.md), [content/provenance](docs/CONTENT.md), [architecture](docs/ARCHITECTURE.md), [decisions](docs/DECISIONS.md), [development journal](docs/DEVLOG.md), and [AI collaboration](docs/AI_COLLABORATION.md) documents interpret them for the portfolio without inventing missing history.
 
-**Current documented state:** 0.4.8-beta, Interface 16001. The Nearby/Zone split matters: names in General do not prove physical proximity or count as personal familiarity. The familiar-thought mechanic uses a 20-minute per-player cooldown surviving reload/logout. Flags, KOS and declined invite counts are personal; compatible nearby users may exchange color marks, not flags. The 2026-10-27 documentation audit did not execute WoW, send invitations, inspect real player data or test migrations. The later 0.4.7-beta release candidate passed automated/mock verification, while final live Forever verification remains pending.
+**Current documented state:** 0.4.11-beta, Interface 16001. The Nearby/Zone split matters: names in General do not prove physical proximity or count as personal familiarity. The familiar-thought mechanic uses a 20-minute per-player cooldown surviving reload/logout and can be disabled in Settings. Flags, KOS and declined invite counts are personal; compatible nearby users may exchange color marks, not flags. Panel visibility and the native minimap button change only presentation; live verification of rest/flight/PvP transitions and minimap interaction remains pending.

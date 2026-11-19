@@ -8,6 +8,14 @@ Code, metadata, README and release history are present. The 2026-10-27 documenta
 
 ## Verification backlog (proposed)
 
+- [x] Add always-visible, city/settlement-hidden and manual-only panel modes without gating detection or encounter history.
+- [x] Generalize automatic hiding into independently selectable resting-area, flight and PvP conditions.
+- [ ] Live-test taxi takeoff/landing, free-flight state changes, battleground/arena entry and return with every checkbox combination.
+- [x] Add a native draggable minimap button with left-click panel toggle and right-click Settings access.
+- [ ] Live-test the minimap button's artwork, drag persistence, left/right clicks, resting-area override and combat behavior.
+- [x] Preserve manual close intent across zone changes and defer protected visibility changes during combat.
+- [ ] Live-test login, reload, teleport, dungeon return and repeated entry/exit for cities, smaller settlements and inns.
+- [ ] Confirm hidden-panel detection, encounter history and Invite behavior in the live Forever client.
 - [x] Restore immediate visual Nearby additions during combat without mutating protected target rows.
 - [x] Add a deliberate combat-time Invite path for newly detected overlay entries.
 - [ ] Live-test mouseover discovery while already in combat: entry should appear immediately with **Nearby because: Hovered / mouseover**.
