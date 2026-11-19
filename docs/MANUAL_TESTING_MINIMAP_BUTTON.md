@@ -1,4 +1,4 @@
-# SocialForever 0.4.10-beta — live minimap-button test plan
+# Unreleased native minimap button — live test plan
 
 Automated checks do not replace testing in World of Warcraft: Forever. Keep existing SavedVariables so position persistence is exercised.
 

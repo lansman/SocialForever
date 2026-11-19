@@ -1,4 +1,4 @@
-# SocialForever 0.4.11-beta — selectable auto-hide test plan
+# Unreleased selectable auto-hide — live test plan
 
 Automated mocks do not prove client event timing. Keep SocialForever enabled and retain SavedVariables throughout this pass.
 

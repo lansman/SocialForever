@@ -1,4 +1,4 @@
-# SocialForever 0.4.9-beta — live Forever test plan
+# Unreleased panel visibility and familiar thoughts — live Forever test plan
 
 These checks require World of Warcraft: Forever (Interface 16001). Automated Lua tests do not count as completion of this plan.
 

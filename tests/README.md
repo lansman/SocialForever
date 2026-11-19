@@ -2,7 +2,7 @@
 
 These tests exercise deterministic Social Forever behavior outside the World of Warcraft: Forever client.
 
-They cover Lua syntax, SavedVariables migration, panel visibility modes and selectable rest/flight/PvP detection, native minimap-button creation/drag persistence, identity icons, familiarity and optional recognition thoughts, memory reset, raid proximity and API-call counts, sorting, Nearby/Zone separation, nearby craft-event parsing, current-sighting provenance, combat-time overlay/invite safety, same-mob prompt safety, sharing privacy, player-name normalization, static cleanup, TOC references, and package integrity.
+They cover Lua syntax, SavedVariables migration, panel visibility modes and selectable rest/flight/PvP detection, native minimap-button creation/drag persistence, identity icons, familiarity and optional recognition thoughts, memory reset, raid proximity and API-call counts, sorting, Nearby/Zone separation, nearby craft-event parsing, current-sighting provenance, one-list combat painting and invite safety, same-mob prompt safety, sharing privacy, player-name normalization, static cleanup, TOC references, and package integrity.
 
 Run the same suite locally with:
 

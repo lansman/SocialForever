@@ -29,7 +29,6 @@ You can:
 - Rate party members after a group ends.
 - Exchange marks with nearby players who also use Social Forever.
 - Quietly notice familiar faces again (blue or purple names) with a soft chat thought.
-- Reset one remembered player, or all of them, from Settings → Memory.
 - Open Social Forever from a draggable button around the minimap.
 
 Your social memory is stored account-wide in `SocialForeverDB`.
@@ -42,7 +41,7 @@ The window is split into two kinds of players.
 
 Players the addon has recently detected around you appear at the top.
 
-A nearby player can stay up to **3 minutes** after the last sighting, but Social Forever also checks presence every few seconds. If the client can prove they are more than 50 yards away, they leave the list right away. If they simply stop showing up on any unit token, they leave after a short grace period (about 15–30 seconds). Seeing them again clears that and keeps them.
+A nearby player can stay up to about **90 seconds** after the last confirmed sighting. Someone who buffs you is noted once, then leaves on that same timer. The buff staying on you does not keep them listed. Presence is checked every 5 seconds. If the client can prove they are more than 50 yards away, they leave right away. If their nameplate disappears or they stop showing up on any unit token, they linger for a short grace period (about 15 seconds, or 20 for chat, buff, and other interaction-only sightings) before leaving. Seeing them again clears that and keeps them. You never appear on your own list.
 
 Out in the world, moving into another subzone removes players from the previous subzone immediately. Capital cities are treated as one larger place, so walking between areas of Ironforge or Stormwind does not clear everyone from the list.
 
@@ -73,15 +72,15 @@ It prioritizes:
 
 The order refreshes every few seconds rather than constantly jumping around.
 
-During combat, Social Forever keeps collecting sightings and memory updates but freezes the secure player-row layout. New, removed, or reordered rows are painted as soon as combat ends. This avoids protected-frame changes while the client is in combat lockdown.
+The same list stays up during combat. People can still appear, leave, and be invited from those rows. Clicking a name to target them waits until the fight ends.
 
 New names fade in, departing names fade out, and names that change position briefly fade before moving.
 
 ## Targeting and inviting
 
-Social Forever never sends invitations automatically. Every invitation remains a deliberate player click through the secure Invite button.
+Social Forever never sends invitations automatically. Every invitation remains a deliberate click on the Invite button. That button stays on the same list during combat and can send the invite while the fight is still going.
 
-Click a nearby player's name to try to target them.
+Click a nearby player's name to target them. During combat that click does not target, and chat says **Targeting players isn't allowed in combat.**
 
 If the target does not resolve to that player, Social Forever removes them from the nearby list rather than pretending they are still there.
 
@@ -95,7 +94,7 @@ The button beside a player can show:
 | **Invited** | An invitation has been sent. |
 | **Declined** | They declined. You can click again to invite them once more. |
 
-The invite button disappears while that player is already in your group and returns after they leave.
+The invite button disappears while that player is already in your group and returns after they leave. Players from the other faction never get an invite button, since they cannot join your group.
 
 If the other player is still in combat, their invite popup waits until they leave combat — that can look like a long delay even when your click already went through.
 
@@ -103,7 +102,7 @@ If the other player is still in combat, their invite popup waits until they leav
 
 Social Forever remembers how often you encounter each player.
 
-A “Been nearby” count rises when someone enters Nearby in a **new** place (subzone, or whole city in a capital). If they leave the list and return in the **same** place — including after a reload — that does not add another count.
+A “Been nearby” count rises when someone enters Nearby in a **new** place (subzone, or whole city in a capital). **Battlegrounds are counted once per player per match**, regardless of deaths, respawns, subzone changes or reloads; a later match can count again. If they leave the list and return in the **same** place — including after a reload — that does not add another count.
 
 Names gradually change color based on how familiar that person is compared with the player you have encountered most often:
 
@@ -115,7 +114,7 @@ Names gradually change color based on how familiar that person is compared with 
 
 Players of the other faction use a dusty war-red instead of the familiarity colors, so they read as hostile without looking like a Red mark.
 
-A Green, Yellow, Red, or Kill on Sight mark overrides familiarity and faction color.
+Green, Yellow, and Red marks appear as a colored letter on the left of the row. They do **not** recolor the name, so familiarity (or other-faction) tint stays readable. Kill on Sight still tints the name.
 
 ### Recognition
 
@@ -127,6 +126,8 @@ It waits a few seconds after they join Nearby so the list can settle first. Each
 
 Hover over a player to see more of their history, including:
 
+- Level, race, and class when known.
+- Guild name, when Social Forever has seen that player on a unit token.
 - Last seen: the place.
 - Seen before: other zones or dungeons where you have met them.
 - How many times they have been nearby.
@@ -169,6 +170,8 @@ You can also create your own custom flags.
 When a party ends, or when someone leaves your party, Social Forever can ask:
 
 **How was this group?**
+
+Filling the last open slot does not ask. The game can call that new person Unknown for a moment, and that is not someone leaving. Someone going offline while they are still in the party does not ask either. The window opens when they actually leave the group.
 
 Each player can be rated:
 
@@ -224,7 +227,7 @@ The tooltip keeps current detection evidence separate from long-term memory: **N
 
 Because of that, a silent player standing beside you may not appear immediately if the game has not exposed them to the addon yet. Skinning is a gathering action rather than a craft announcement, and no dedicated nearby-player Skinning event is currently verified; a skinner therefore still needs some other usable identity signal such as a unit token, nameplate, interaction, or shared Damage Meter session.
 
-During combat, Social Forever paints a separate non-secure Nearby overlay instead of rearranging its protected target rows. Newly detected players can therefore appear immediately, and the overlay's **Invite** button uses Forever's party API from your deliberate click. Row click-to-target remains unavailable for a newly remapped combat entry until combat ends and the secure target rows can be armed safely again.
+During combat the window keeps the same rows. A new mouseover can show up on that list immediately, and Invite on that row can still be clicked. A name click during combat prints **Targeting players isn't allowed in combat.**
 
 Social Forever does not enable nameplates or use `/who` to build the list. Forever's protected Combat Log text is not parsed; post-combat combat discovery uses the built-in Damage Meter when available.
 
@@ -232,11 +235,11 @@ Social Forever does not enable nameplates or use `/who` to build the list. Forev
 
 The window normally sits above the chat frame.
 
-- The close **x** sits in the top-left corner, away from the gear button.
+- Top row, left to right: close **x**, settings gear, region (zone) tab, Nearby tab.
 - Hover the **x** for a reminder that `/sf` or `/socialforever` brings the window back.
-- Drag the title bar to move it.
+- Drag the window or the list tabs to move it.
 - Drag the `..` grip in the bottom-right corner to resize it.
-- Use the gear button to choose **Panel visibility**, turn **Familiar thoughts** on or off, toggle the same-mob invite prompt, change name size and background opacity, and reset Memory (one player or all remembered players).
+- Use the gear button to choose **Panel visibility**, turn **Familiar thoughts** on or off, change **Name size** and **Background** opacity, and toggle **Show buff caster**.
 - Left-click the minimap note icon to show or hide the panel. Right-click it to open Settings, or drag it around the minimap rim.
 - Use the mouse wheel to scroll longer lists.
 - Press Escape to close the right-click menu or group-rating window. The main Social Forever window stays open.
@@ -276,11 +279,11 @@ MIT. See [LICENSE](LICENSE).
 
 ## Development
 
-The version-by-version development history is in [DEVELOPMENT.md](DEVELOPMENT.md).
+The version-by-version development history is in [DEVELOPMENT.md](docs/DEVELOPMENT.md).
 
 ## Development documentation
 
-- [Concept](CONCEPT.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
+- [Concept](docs/CONCEPT.md) · [Roadmap](docs/ROADMAP.md) · [Changelog](CHANGELOG.md)
 - [Architecture](docs/ARCHITECTURE.md) · [Design evidence](docs/DECISIONS.md) · [Development journal](docs/DEVLOG.md)
 - [AI collaborator rules](AGENTS.md)
 
@@ -288,6 +291,6 @@ The journal distinguishes source-based reconstruction, human creative direction,
 
 ## Documentation audit #32 — 27 October 2026
 
-The original [development log](DEVELOPMENT.md) and [changelog](CHANGELOG.md) remain the primary account of releases and corrections. The supporting [design](docs/DESIGN.md), [content/provenance](docs/CONTENT.md), [architecture](docs/ARCHITECTURE.md), [decisions](docs/DECISIONS.md), [development journal](docs/DEVLOG.md), and [AI collaboration](docs/AI_COLLABORATION.md) documents interpret them for the portfolio without inventing missing history.
+The original [development log](docs/DEVELOPMENT.md) and [changelog](CHANGELOG.md) remain the primary account of releases and corrections. The supporting [design](docs/DESIGN.md), [content/provenance](docs/CONTENT.md), [architecture](docs/ARCHITECTURE.md), [decisions](docs/DECISIONS.md), [development journal](docs/DEVLOG.md), and [AI collaboration](docs/AI_COLLABORATION.md) documents interpret them for the portfolio without inventing missing history.
 
-**Current documented state:** 0.4.11-beta, Interface 16001. The Nearby/Zone split matters: names in General do not prove physical proximity or count as personal familiarity. The familiar-thought mechanic uses a 20-minute per-player cooldown surviving reload/logout and can be disabled in Settings. Flags, KOS and declined invite counts are personal; compatible nearby users may exchange color marks, not flags. Panel visibility and the native minimap button change only presentation; live verification of rest/flight/PvP transitions and minimap interaction remains pending.
+**Current documented state:** published tag **0.4.11-beta**, Interface 16001, plus unreleased panel-visibility, optional familiar-thought and native minimap-button work. The Nearby/Zone split matters: names in General do not prove physical proximity or count as personal familiarity. Flags, KOS and declined invite counts are personal; compatible nearby users may exchange color marks, not flags. Panel visibility changes only presentation; live verification of rest/flight/PvP transitions and minimap interaction remains pending.
