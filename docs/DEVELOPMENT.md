@@ -5,6 +5,12 @@ Social Forever, by Babunigaming. Newest step first.
 When a change ships, add it at the top. Keep the note about what the player can see, and why it was made.
 
 
+## Unreleased — recheck a party exit when rating prompts re-arm (2026-11-20)
+
+- `PLAYER_ENTERING_WORLD` deliberately pauses rating prompts for two seconds. If the player left the party during that guard, `Group.RefreshRoster` kept `S.wasParty` and the last roster but returned before showing the window. `Group.Arm` then only flipped the guard and never reconsidered the missed solo transition.
+- Re-arming now immediately runs the ordinary roster refresh. The retained party state produces the same one-time **How was this group?** window; the existing signature guard still blocks rapid duplicates. `tests/test_group_rate.lua` covers party-to-solo while disarmed and the subsequent re-arm.
+- This is mock-verified behavior. A live Forever check that leaves a party during a loading/world transition is still pending.
+
 ## Unreleased — selectable auto-hide situations (2026-11-20)
 
 - Babuni extended panel auto-hiding beyond settlements and specifically requested hiding during flight, with separate checkboxes for each context.
